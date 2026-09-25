@@ -494,8 +494,8 @@ function bindPanel() {
   };
   // --- panel open / close ------------------------------------------------
   // On a phone the panel is a bottom sheet, so it must never be the only way
-  // out of itself. Three ways to close: the tab, the sheet's own X, or a tap
-  // on the canvas behind it.
+  // out of itself. The toggle sits above it and flips cogwheel -> cross;
+  // tapping the field behind the sheet closes it too.
   const tab = document.getElementById("tab");
   const setPanel = (open) => {
     panel.classList.toggle("hidden", !open);
@@ -505,7 +505,6 @@ function bindPanel() {
     e.stopPropagation();
     setPanel(panel.classList.contains("hidden"));
   });
-  document.getElementById("close").addEventListener("click", () => setPanel(false));
   document.addEventListener("pointerdown", (e) => {
     if (panel.classList.contains("hidden")) return;
     if (panel.contains(e.target) || tab.contains(e.target)) return;

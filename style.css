@@ -115,25 +115,34 @@ html, body {
 #begin:active { background: #fff; color: #000; }
 
 /* ---------- panel tab (touch, no keyboard) ------------------------------ */
-/* top right, clear of the bottom sheet on phones */
+/* ---------- controls toggle: pixel cogwheel / pixel cross -------------- */
+/* Top right, above the sheet, so it is never covered by the thing it opens.
+   No box, no border — just the mark, with a black halo so it stays legible
+   when the field runs dense behind it. */
 #tab {
-  display: none;                 /* revealed once the sensor is running */
   position: fixed; z-index: 25;
   top: calc(14px + env(safe-area-inset-top));
   right: calc(14px + env(safe-area-inset-right));
-  width: 44px; height: 44px;
-  display: grid; place-items: center;
-  background: rgba(0, 0, 0, .55);
-  border: 1px solid #262626;
-  color: #8a8a8a; cursor: pointer;
-  backdrop-filter: blur(6px);
-  transition: color .15s, border-color .15s;
+  width: 46px; height: 46px;
+  display: none; place-items: center;
+  background: none; border: 0; padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 body.live #tab { display: grid; }
-#tab svg { stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: square; }
-#tab svg circle { fill: #000; }
-#tab:hover { color: #fff; border-color: #fff; }
-#tab.open { color: #fff; border-color: #fff; }
+
+#tab .ico {
+  grid-area: 1 / 1;                       /* stack both marks in one cell */
+  fill: #fff;
+  filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 5px #000);
+  opacity: .82;
+  transition: opacity .15s;
+}
+#tab:hover .ico, #tab:active .ico { opacity: 1; }
+#tab .cross { display: none; }
+#tab.open .gear { display: none; }
+#tab.open .cross { display: block; }
+#tab.open .ico { opacity: 1; }
 
 /* ---------- phones ------------------------------------------------------ */
 @media (max-width: 640px) {
@@ -148,6 +157,4 @@ body.live #tab { display: grid; }
   #panel select, #panel button { padding: 9px 6px; }
   #panel .keys { display: none; }
   #panel h1 { font-size: 11px; margin-bottom: 14px; }
-  /* the sheet can be dismissed by its own ✕, the tab, or tapping the canvas */
-  #tab { background: rgba(0, 0, 0, .7); }
 }

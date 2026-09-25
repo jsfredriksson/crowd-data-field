@@ -23,7 +23,7 @@ Chrome is the safest browser for the GPU delegate; Safari works too.
 
 | | |
 |---|---|
-| sliders button, top right | show / hide the control panel |
+| cogwheel, top right | show / hide the control panel — becomes a cross while open |
 | `H` or `Esc` | same, from the keyboard |
 | `F` | fullscreen |
 | `S` | save a PNG of the current frame |
@@ -114,10 +114,13 @@ is the only way it reads as an installation rather than a web page.
 
 - The **camera** control switches front / back. Back camera for showing a room,
   front for the selfie-mirror version. Mirroring follows automatically.
-- Tap the **sliders button, top right** for the controls — the panel becomes a
-  bottom sheet. Close it with that same button, the `✕` in the sheet header, or
-  by tapping the field behind it. The button sits top right precisely so the
-  sheet can never cover the only way out of itself.
+- Tap the **cogwheel, top right** for the controls — the panel becomes a bottom
+  sheet and the cogwheel turns into a cross. Close it with that same button or
+  by tapping the field behind it. It sits top right precisely so the sheet can
+  never cover the only way out of itself.
+
+  Both marks are pixel-drawn: the cogwheel on a 5×5 grid, the cross being the
+  pixel plus turned 45° with its centre punched out.
 - Sensor and canvas resolution are capped lower on touch devices so it holds
   frame rate. Expect ~30fps on a recent iPhone.
 - Nothing is uploaded. All processing is on-device, in the browser.
