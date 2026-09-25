@@ -34,10 +34,23 @@
 
   <div id="boot" class="gone">initialising sensor…</div>
 
-  <button id="tab" title="controls">···</button>
+  <button id="tab" title="controls" aria-label="controls">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <line x1="2.5" y1="8.5" x2="21.5" y2="8.5" />
+      <line x1="2.5" y1="15.5" x2="21.5" y2="15.5" />
+      <circle cx="8.5" cy="8.5" r="2.9" />
+      <circle cx="16" cy="15.5" r="2.9" />
+    </svg>
+  </button>
 
   <aside id="panel" class="hidden">
-    <h1>field controls <span class="hint">H / tap ···</span></h1>
+    <h1>field controls
+      <button id="close" title="close" aria-label="close controls">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <line x1="5" y1="5" x2="19" y2="19" /><line x1="19" y1="5" x2="5" y2="19" />
+        </svg>
+      </button>
+    </h1>
 
     <label>camera
       <select id="facing">

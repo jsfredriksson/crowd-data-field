@@ -21,9 +21,10 @@ Chrome is the safest browser for the GPU delegate; Safari works too.
 
 ## Controls
 
-| Key | |
+| | |
 |---|---|
-| `H` | show / hide the control panel |
+| sliders button, top right | show / hide the control panel |
+| `H` or `Esc` | same, from the keyboard |
 | `F` | fullscreen |
 | `S` | save a PNG of the current frame |
 | `R` | reset to defaults |
@@ -88,9 +89,22 @@ The git repo lives **outside** the vault at `~/Developer/crowd-data-field`.
 That is deliberate: a `.git` folder inside iCloud Drive will eventually corrupt
 itself. You keep editing here in the vault; the deploy script syncs.
 
-1. **Once:** double-click `publish.command` — logs you in, creates the repo,
-   turns Pages on, copies the live URL to your clipboard.
-2. **Every time after:** double-click `deploy.command`. Live in ~30 seconds.
+Two ways to get it onto a phone:
+
+**A · Temporary — nothing published.** Double-click `phone.command`. It starts
+the local server and opens a throwaway `https://….trycloudflare.com` address
+pointing at your Mac. Good for a quick look or a demo in the room. The link
+dies when you close the window, and your Mac has to stay awake.
+
+**B · Permanent — a real URL to send people.** Double-click `go-public.command`
+once. It flips the repo to public (it asks first) and turns Pages on at
+`https://jsfredriksson.github.io/crowd-data-field/`. After that,
+`deploy.command` pushes any change live in ~30 seconds.
+
+GitHub Pages will not serve a **private** repo unless you pay for Pro — that is
+why `publish.command` appeared to work but left a dead URL. If you want to stay
+private and still have a permanent address, Cloudflare Pages does it free, but
+you have to connect the repo through their dashboard by hand.
 
 ### On the phone
 
@@ -100,7 +114,10 @@ is the only way it reads as an installation rather than a web page.
 
 - The **camera** control switches front / back. Back camera for showing a room,
   front for the selfie-mirror version. Mirroring follows automatically.
-- Tap the `···` bottom-left for the controls — the panel becomes a bottom sheet.
+- Tap the **sliders button, top right** for the controls — the panel becomes a
+  bottom sheet. Close it with that same button, the `✕` in the sheet header, or
+  by tapping the field behind it. The button sits top right precisely so the
+  sheet can never cover the only way out of itself.
 - Sensor and canvas resolution are capped lower on touch devices so it holds
   frame rate. Expect ~30fps on a recent iPhone.
 - Nothing is uploaded. All processing is on-device, in the browser.

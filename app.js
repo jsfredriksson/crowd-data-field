@@ -405,6 +405,7 @@ async function start() {
   await new Promise((go) => {
     document.getElementById("begin").addEventListener("click", () => {
       gate.classList.add("gone");
+      document.body.classList.add("live");   // reveals the controls tab
       go();
     }, { once: true });
   });
@@ -491,14 +492,34 @@ function bindPanel() {
     Object.assign(P, DEFAULTS, { facing, mirror: facing === "user" });
     buildTokens(); sync(); layout(); save();
   };
-  document.getElementById("tab").addEventListener("click", () => panel.classList.toggle("hidden"));
+  // --- panel open / close ------------------------------------------------
+  // On a phone the panel is a bottom sheet, so it must never be the only way
+  // out of itself. Three ways to close: the tab, the sheet's own X, or a tap
+  // on the canvas behind it.
+  const tab = document.getElementById("tab");
+  const setPanel = (open) => {
+    panel.classList.toggle("hidden", !open);
+    tab.classList.toggle("open", open);
+  };
+  tab.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setPanel(panel.classList.contains("hidden"));
+  });
+  document.getElementById("close").addEventListener("click", () => setPanel(false));
+  document.addEventListener("pointerdown", (e) => {
+    if (panel.classList.contains("hidden")) return;
+    if (panel.contains(e.target) || tab.contains(e.target)) return;
+    setPanel(false);
+  });
+
   document.getElementById("reset").addEventListener("click", reset);
   document.getElementById("shot").addEventListener("click", savePNG);
 
   addEventListener("keydown", (e) => {
     if (e.metaKey || e.ctrlKey) return;
     const k = e.key.toLowerCase();
-    if (k === "h") panel.classList.toggle("hidden");
+    if (k === "h") setPanel(panel.classList.contains("hidden"));
+    if (e.key === "Escape") setPanel(false);
     if (k === "f") {
       if (document.fullscreenElement) document.exitFullscreen?.();
       else document.documentElement.requestFullscreen?.();
