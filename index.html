@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Crowd Data Field</title>
+
+<meta name="theme-color" content="#000000" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Data Field" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon.png" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="stage">
+    <canvas id="out"></canvas>
+  </div>
+
+  <video id="src" playsinline autoplay muted></video>
+  <canvas id="crop"></canvas>
+
+  <!-- iOS needs a user gesture before it will hand over the camera -->
+  <div id="gate">
+    <div class="gate-inner">
+      <p class="gate-title">crowd data field</p>
+      <p class="gate-sub">a prototype. nothing is recorded or stored.</p>
+      <button id="begin">start sensor</button>
+    </div>
+  </div>
+
+  <div id="boot" class="gone">initialising sensor…</div>
+
+  <button id="tab" title="controls">···</button>
+
+  <aside id="panel" class="hidden">
+    <h1>field controls <span class="hint">H / tap ···</span></h1>
+
+    <label>camera
+      <select id="facing">
+        <option value="user">front — selfie</option>
+        <option value="environment">back — the room</option>
+      </select>
+    </label>
+
+    <label>format
+      <select id="format">
+        <option value="fill">fill window</option>
+        <option value="1:1">1:1 — cube face</option>
+        <option value="16:9">16:9</option>
+        <option value="9:16">9:16</option>
+        <option value="4:1">4:1 — banner</option>
+      </select>
+    </label>
+
+    <label>token set
+      <select id="tokenSet">
+        <option value="metabolic">metabolic (VO₂ CO₂ H+ ¹³C DLW)</option>
+        <option value="metabolic_wide">metabolic + values</option>
+        <option value="lactate">lactate / pH</option>
+        <option value="minimal">minimal (VO₂ only)</option>
+      </select>
+    </label>
+
+    <label>type size <output id="o_fontSize"></output>
+      <input id="fontSize" type="range" min="8" max="40" step="1" />
+    </label>
+
+    <label>leading ratio <output id="o_leading"></output>
+      <input id="leading" type="range" min="1.2" max="4" step="0.05" />
+    </label>
+
+    <label>density <output id="o_density"></output>
+      <input id="density" type="range" min="0.4" max="4" step="0.05" />
+    </label>
+
+    <label>trail decay <output id="o_decay"></output>
+      <input id="decay" type="range" min="0.5" max="0.995" step="0.005" />
+    </label>
+
+    <label>threshold <output id="o_threshold"></output>
+      <input id="threshold" type="range" min="0" max="0.6" step="0.01" />
+    </label>
+
+    <label>edge falloff <output id="o_falloff"></output>
+      <input id="falloff" type="range" min="0" max="1" step="0.01" />
+    </label>
+
+    <label>min opacity <output id="o_minAlpha"></output>
+      <input id="minAlpha" type="range" min="0" max="0.8" step="0.01" />
+    </label>
+
+    <label class="row"><input id="mirror" type="checkbox" /> mirror</label>
+    <label class="row"><input id="showMask" type="checkbox" /> show mask (debug)</label>
+
+    <div class="btns">
+      <button id="reset">reset</button>
+      <button id="shot">save PNG</button>
+    </div>
+
+    <p class="meta"><span id="fps">—</span> · <span id="res">—</span><br><span id="sensor">—</span></p>
+    <p class="keys">F fullscreen · H panel · S save · R reset</p>
+  </aside>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+:root { --fg: #fff; --dim: #6a6a6a; }
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: #000; color: var(--fg);
+  font-family: "Maurten Mono", "MaurtenMono", ui-monospace, "SF Mono", Menlo, monospace;
+  overflow: hidden;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+#stage {
+  position: fixed; inset: 0;
+  display: grid; place-items: center;
+}
+
+/* sized in JS — fills the window, or letterboxes to a locked ratio */
+#out { background: #000; display: block; }
+
+#boot {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  font-size: 12px; letter-spacing: .08em; color: var(--dim);
+  text-transform: lowercase; pointer-events: none;
+}
+#boot.gone { display: none; }
+#boot.err { color: #fff; max-width: 60ch; text-align: center; line-height: 1.6; }
+
+/* hidden working surfaces */
+#src, #crop { position: fixed; left: -10000px; top: 0; width: 320px; }
+
+#panel {
+  position: fixed;
+  top: calc(16px + env(safe-area-inset-top));
+  left: calc(16px + env(safe-area-inset-left));
+  width: 270px;
+  max-height: calc(100vh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  background: rgba(0,0,0,.82);
+  border: 1px solid #1e1e1e;
+  padding: 14px 14px 10px;
+  font-size: 10px; letter-spacing: .06em;
+  text-transform: lowercase;
+  backdrop-filter: blur(6px);
+}
+#panel.hidden { display: none; }
+
+#panel h1 {
+  font-size: 10px; font-weight: 400; margin: 0 0 12px;
+  color: var(--fg); letter-spacing: .14em;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+#panel .hint { color: #4a4a4a; letter-spacing: .06em; }
+
+#panel label { display: block; margin: 0 0 10px; color: var(--dim); }
+#panel label.row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+#panel output { float: right; color: var(--fg); }
+
+#panel input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 1px; background: #303030; margin: 7px 0 0; outline: none;
+}
+#panel input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 9px; height: 9px; background: #fff; cursor: pointer;
+}
+
+#panel select {
+  width: 100%; margin-top: 5px; background: #000; color: #fff;
+  border: 1px solid #262626; padding: 4px; font: inherit;
+}
+
+#panel .btns { display: flex; gap: 6px; margin: 12px 0 8px; }
+#panel button {
+  flex: 1; background: #000; color: #fff; border: 1px solid #2a2a2a;
+  padding: 6px 4px; font: inherit; letter-spacing: .06em; cursor: pointer;
+}
+#panel button:hover { border-color: #fff; }
+
+#panel .meta { margin: 8px 0 2px; color: #4a4a4a; }
+#panel .keys { margin: 0; color: #303030; }
+
+
+/* ---------- start gate (iOS needs a gesture before the camera) ---------- */
+#gate {
+  position: fixed; inset: 0; z-index: 20;
+  background: #000;
+  display: grid; place-items: center;
+  padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
+}
+#gate.gone { display: none; }
+.gate-inner { text-align: center; max-width: 34ch; }
+.gate-title {
+  font-size: 11px; letter-spacing: .26em; text-transform: uppercase;
+  margin: 0 0 10px; color: #fff;
+}
+.gate-sub {
+  font-size: 10px; letter-spacing: .06em; color: var(--dim);
+  margin: 0 0 34px; line-height: 1.7;
+}
+#begin {
+  background: #000; color: #fff; border: 1px solid #fff;
+  padding: 13px 30px; font: inherit; font-size: 10px;
+  letter-spacing: .18em; text-transform: lowercase; cursor: pointer;
+}
+#begin:active { background: #fff; color: #000; }
+
+/* ---------- panel tab (touch, no keyboard) ------------------------------ */
+#tab {
+  position: fixed; z-index: 15;
+  left: calc(10px + env(safe-area-inset-left));
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  width: 40px; height: 40px;
+  background: transparent; border: 0; color: #3a3a3a;
+  font: inherit; font-size: 15px; line-height: 1; cursor: pointer;
+  letter-spacing: .06em;
+}
+#tab:hover, #tab:active { color: #fff; }
+
+/* ---------- phones ------------------------------------------------------ */
+@media (max-width: 640px) {
+  #panel {
+    top: auto; left: 0; right: 0; width: auto;
+    bottom: 0; border: 0; border-top: 1px solid #1e1e1e;
+    max-height: 62vh;
+    padding: 14px 18px calc(20px + env(safe-area-inset-bottom));
+  }
+  #panel input[type=range] { height: 2px; padding: 12px 0; margin-top: 0; }
+  #panel input[type=range]::-webkit-slider-thumb { width: 14px; height: 14px; }
+  #panel select, #panel button { padding: 9px 6px; }
+  #panel .keys { display: none; }
+  #tab { color: #555; }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Crowd Data Field",
+  "short_name": "Data Field",
+  "description": "Live metabolic data field — Maurten prototype",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
