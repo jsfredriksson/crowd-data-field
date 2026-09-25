@@ -77,3 +77,43 @@ code, not more.
   wobble on a real crowd, and it depends on light. That is expected — this
   prototype exists to lock the **look**, not the sensing.
 - Runs at the browser's frame rate; on a Mac it should hold 60fps.
+
+
+## Publish to GitHub Pages (for phones)
+
+The camera API needs a secure origin. GitHub Pages is HTTPS, so it just works
+on iPhone and Android — no app, no TestFlight, no cables.
+
+The git repo lives **outside** the vault at `~/Developer/crowd-data-field`.
+That is deliberate: a `.git` folder inside iCloud Drive will eventually corrupt
+itself. You keep editing here in the vault; the deploy script syncs.
+
+1. **Once:** double-click `publish.command` — logs you in, creates the repo,
+   turns Pages on, copies the live URL to your clipboard.
+2. **Every time after:** double-click `deploy.command`. Live in ~30 seconds.
+
+### On the phone
+
+Open the URL in **Safari** → allow camera → `Share` → **Add to Home Screen**.
+Launched from the home screen it runs fullscreen with no browser chrome, which
+is the only way it reads as an installation rather than a web page.
+
+- The **camera** control switches front / back. Back camera for showing a room,
+  front for the selfie-mirror version. Mirroring follows automatically.
+- Tap the `···` bottom-left for the controls — the panel becomes a bottom sheet.
+- Sensor and canvas resolution are capped lower on touch devices so it holds
+  frame rate. Expect ~30fps on a recent iPhone.
+- Nothing is uploaded. All processing is on-device, in the browser.
+
+## The icon
+
+A camera lens built entirely out of the field's own vocabulary — same tokens,
+same weights, same black-and-white rule as the app. Nothing decorative added.
+
+`python3 make-icon.py` regenerates `icon.png` (512), `icon-180.png` (iOS home
+screen) and `favicon.png`. Needs ImageMagick. Edit `TOKENS` at the top to keep
+it in step with `TOKEN_SETS.metabolic` in `app.js`, or `BARREL_OUT / GAP_IN /
+GAP_OUT / PUPIL` to reshape the lens.
+
+It renders in Menlo because Maurten Mono isn't installed on this machine —
+point `FONT` at the real file and re-run when it is.
