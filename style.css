@@ -158,3 +158,8 @@ body.live #tab { display: grid; }
   #panel .keys { display: none; }
   #panel h1 { font-size: 11px; margin-bottom: 14px; }
 }
+
+/* levels group — dimmed while auto levels drives it */
+#tonebox { border-left: 1px solid #1e1e1e; padding-left: 10px; margin: 0 0 10px; }
+#tonebox.off { display: none; }
+#tonebox.auto label:not(.row) { opacity: .35; pointer-events: none; }

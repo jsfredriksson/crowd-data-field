@@ -35,6 +35,10 @@ All slider values persist in localStorage, so your tuning survives a reload.
 
 | Control | |
 |---|---|
+| **source** | where presence comes from — see below. The single biggest control over how the piece reads |
+| **auto levels** | tracks the 2nd/98th percentile of the frame and stretches contrast to fit. Leave on unless you're matching a specific look |
+| **black / white point** | manual contrast. Raise black to crush the room to nothing, lower white to make mid-greys solid |
+| **gamma** | bends the midtones. <1 fills out, >1 thins down |
 | **format** | fill window, or letterbox to 1:1 / 16:9 / 9:16 / 4:1 |
 | **token set** | the vocabulary of the field. Edit `TOKEN_SETS` in `app.js` to add your own, with per-token weights |
 | **type size** | glyph size in px against a **1200px reference short side** — the look is resolution-independent, so a value tuned on a laptop holds on an LED wall |
@@ -47,11 +51,30 @@ All slider values persist in localStorage, so your tuning survives a reload.
 | **mirror** | flip horizontally so the crowd sees itself the right way round |
 | **show mask** | debug overlay of the raw heat field |
 
+## Source modes — the important one
+
+A person-mask is binary, so it can only ever give you a blob. The reference
+frames this piece is built from are **tonal**: a dark athlete on a bright cyc,
+with glyph density following brightness. That's what keeps the calf, the sock
+and the shoe readable.
+
+| Mode | |
+|---|---|
+| **tone inside silhouette** *(default)* | brightness drives density, but clipped to the person. Tonal detail without the room filling up. Auto levels measure the subject only, not the background |
+| **tone** | brightness drives density across the whole frame, dark = dense. This is the reference look, and it needs a **bright background** — a white wall, a lit cyc, a window |
+| **tone inverted** | bright = dense. For a lit subject against a dark room, which is what most event spaces actually are |
+| **silhouette only** | the original binary mask. Cleanest cut-out, zero internal detail |
+
+The two pure tone modes skip the segmentation model entirely, so they're also
+the fastest — worth knowing on a phone.
+
 ## Architecture
 
 ```
 layout()       ->  canvas + sensor + field resized to the window, aspect-matched
-sensor.read()  ->  mask[MW×MH]   (0..1 presence, long side 256)
+sensor.read()  ->  lum[MW×MH] + segm[MW×MH]
+composeMask()  ->  levels(lum) combined with segm per source mode
+               ->  mask[MW×MH]   (0..1 presence, long side 256)
 updateField()  ->  heat[MW/2 × MH/2]  (rise instant, fall by decay) -> 3×3 blur
 render()       ->  row-flow token layout, dithered by presence
                    margin = 3% of format diagonal (guidelines)

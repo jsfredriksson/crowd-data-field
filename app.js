@@ -50,6 +50,11 @@ const TOKEN_SETS = {
 /* ---------- params ------------------------------------------------------ */
 const DEFAULTS = {
   facing: "user",
+  source: "mask_tone",   // mask | tone | tone_inv | mask_tone
+  black: 0.10,           // luminance mapped to "no glyphs"
+  white: 0.78,           // luminance mapped to "solid"
+  gamma: 1.00,
+  autoLevels: true,
   format: "fill",
   tokenSet: "metabolic",
   fontSize: 20,      // px at REF short side
@@ -66,7 +71,9 @@ const P = { ...DEFAULTS, ...JSON.parse(localStorage.getItem("cdf") || "{}") };
 
 /* ---------- geometry, reallocated on resize ----------------------------- */
 const S = { W: 0, H: 0, MW: 0, MH: 0, FW: 0, FH: 0, scale: 1 };
-let mask = new Float32Array(1);
+let mask = new Float32Array(1);   // composed presence, 0..1
+let lum  = new Float32Array(1);   // camera luminance, 0..1
+let segm = new Float32Array(1);   // person mask, 0/1
 let heat = new Float32Array(1);
 let blur = new Float32Array(1);
 
@@ -106,6 +113,8 @@ function layout() {
 
   S.MW = MW; S.MH = MH; S.FW = MW >> 1; S.FH = MH >> 1;
   mask = new Float32Array(MW * MH);
+  lum  = new Float32Array(MW * MH);
+  segm = new Float32Array(MW * MH);
   heat = new Float32Array(S.FW * S.FH);
   blur = new Float32Array(S.FW * S.FH);
   crop.width = MW; crop.height = MH;
@@ -268,6 +277,71 @@ function render() {
 /* Each sensor fills `mask` (S.MW x S.MH, 0..1) from the cropped camera frame
    in `crop`. Add a depth sensor here — same contract.                      */
 
+/* Luminance is the real subject here. The reference frames are a dark athlete
+   on a bright cyc: presence follows tone, so you keep the calf, the sock, the
+   shoe. A person-mask can only ever give you a blob.                        */
+function readLuminance() {
+  const d = cctx.getImageData(0, 0, S.MW, S.MH).data;
+  for (let i = 0, p = 0; i < lum.length; i++, p += 4) {
+    lum[i] = (d[p] * 0.299 + d[p + 1] * 0.587 + d[p + 2] * 0.114) / 255;
+  }
+}
+
+/* Auto levels: 2nd/98th percentile via a coarse histogram, smoothed hard so
+   the field doesn't pump when someone walks past a light.                   */
+const HIST = new Int32Array(64);
+let autoB = 0.1, autoW = 0.8;
+function trackLevels(subjectOnly) {
+  HIST.fill(0);
+  let n = 0;
+  if (subjectOnly) {
+    for (let i = 0; i < lum.length; i += 3) {
+      if (segm[i] > 0.5) { HIST[(lum[i] * 63) | 0]++; n++; }
+    }
+  }
+  if (n < 200) {                       // nobody there — fall back to the frame
+    HIST.fill(0); n = 0;
+    for (let i = 0; i < lum.length; i += 3) { HIST[(lum[i] * 63) | 0]++; n++; }
+  }
+  const lo = n * 0.02, hi = n * 0.98;
+  let acc = 0, b = 0, w = 1;
+  for (let i = 0; i < 64; i++) {
+    acc += HIST[i];
+    if (acc >= lo) { b = i / 63; break; }
+  }
+  acc = 0;
+  for (let i = 0; i < 64; i++) {
+    acc += HIST[i];
+    if (acc >= hi) { w = i / 63; break; }
+  }
+  if (w - b < 0.08) w = b + 0.08;
+  autoB = autoB * 0.94 + b * 0.06;
+  autoW = autoW * 0.94 + w * 0.06;
+}
+
+function composeMask() {
+  const src = P.source;
+  const useTone = src !== "mask";
+  let blk = P.black, wht = P.white;
+
+  if (useTone && P.autoLevels) {
+    trackLevels(src === "mask_tone");
+    blk = autoB; wht = autoW;
+  }
+  const span = Math.max(0.02, wht - blk);
+  const g = P.gamma;
+  const invert = src !== "tone_inv";     // dark subject on light ground
+
+  for (let i = 0; i < mask.length; i++) {
+    if (!useTone) { mask[i] = segm[i]; continue; }
+    let v = (lum[i] - blk) / span;
+    v = v < 0 ? 0 : v > 1 ? 1 : v;
+    if (invert) v = 1 - v;
+    if (g !== 1) v = Math.pow(v, g);
+    mask[i] = src === "mask_tone" ? segm[i] * v : v;
+  }
+}
+
 function drawCrop() {
   const vw = video.videoWidth, vh = video.videoHeight;
   if (!vw || !vh) return false;
@@ -317,7 +391,7 @@ async function mediapipeSensor() {
       for (let x = 0; x < MW; x++) {
         const sx = mw === MW ? x : ((x * mw / MW) | 0);
         const v = d[srow + sx] > 0 ? 1 : 0;
-        mask[drow + x] = v;
+        segm[drow + x] = v;
         if (edgeRow || x < 4 || x > MW - 5) { border += v; bn++; }
       }
     }
@@ -325,7 +399,7 @@ async function mediapipeSensor() {
       borderAvg = borderAvg * 0.9 + (border / bn) * 0.1;
       calibrated++;
     }
-    if (borderAvg > 0.6) for (let i = 0; i < mask.length; i++) mask[i] = 1 - mask[i];
+    if (borderAvg > 0.6) for (let i = 0; i < segm.length; i++) segm[i] = 1 - segm[i];
 
     m.close?.();
     res.close?.();
@@ -336,6 +410,8 @@ async function mediapipeSensor() {
     resize() { calibrated = 0; borderAvg = 0.5; },
     read(ts) {
       if (!drawCrop()) return;
+      if (P.source !== "mask") readLuminance();
+      if (P.source === "tone" || P.source === "tone_inv") return;  // skip the model
       let done = false;
       const r = seg.segmentForVideo(crop, ts, (res) => { done = true; consume(res); });
       if (!done && r) consume(r);
@@ -352,13 +428,12 @@ function motionSensor() {
     resize() { bg = null; },
     read() {
       if (!drawCrop()) return;
-      const d = cctx.getImageData(0, 0, S.MW, S.MH).data;
-      if (!bg || bg.length !== mask.length) bg = new Float32Array(mask.length);
-      for (let i = 0, p = 0; i < mask.length; i++, p += 4) {
-        const lum = (d[p] * 0.299 + d[p + 1] * 0.587 + d[p + 2] * 0.114) / 255;
-        const diff = Math.abs(lum - bg[i]);
-        mask[i] = diff > 0.09 ? Math.min(1, diff * 5) : 0;
-        bg[i] = bg[i] * 0.985 + lum * 0.015;      // slow adaptation
+      readLuminance();
+      if (!bg || bg.length !== segm.length) bg = new Float32Array(segm.length);
+      for (let i = 0; i < segm.length; i++) {
+        const diff = Math.abs(lum[i] - bg[i]);
+        segm[i] = diff > 0.09 ? Math.min(1, diff * 5) : 0;
+        bg[i] = bg[i] * 0.985 + lum[i] * 0.015;   // slow adaptation
       }
     },
   };
@@ -433,6 +508,7 @@ async function start() {
 
 function loop(ts) {
   sensor.read(ts);
+  composeMask();
   updateField();
   render();
 
@@ -446,11 +522,18 @@ function loop(ts) {
 }
 
 /* ---------- panel ------------------------------------------------------- */
-const SLIDERS = ["fontSize", "leading", "density", "decay", "threshold", "falloff", "minAlpha"];
+const SLIDERS = ["fontSize", "leading", "density", "decay", "threshold", "falloff",
+                 "minAlpha", "black", "white", "gamma"];
 
 function bindPanel() {
   const panel = document.getElementById("panel");
   const save = () => localStorage.setItem("cdf", JSON.stringify(P));
+
+  const tonebox = document.getElementById("tonebox");
+  const syncTone = () => {
+    tonebox.classList.toggle("off", P.source === "mask");
+    tonebox.classList.toggle("auto", P.autoLevels);
+  };
 
   const sync = () => {
     for (const k of SLIDERS) {
@@ -458,6 +541,9 @@ function bindPanel() {
       document.getElementById("o_" + k).textContent = P[k];
     }
     document.getElementById("facing").value = P.facing;
+    document.getElementById("source").value = P.source;
+    document.getElementById("autoLevels").checked = P.autoLevels;
+    syncTone();
     document.getElementById("format").value = P.format;
     document.getElementById("tokenSet").value = P.tokenSet;
     document.getElementById("mirror").checked = P.mirror;
@@ -477,6 +563,12 @@ function bindPanel() {
     document.getElementById("mirror").checked = P.mirror;
     save();
     if (stream) await openCamera(P.facing);
+  });
+  document.getElementById("source").addEventListener("change", (e) => {
+    P.source = e.target.value; syncTone(); save();
+  });
+  document.getElementById("autoLevels").addEventListener("change", (e) => {
+    P.autoLevels = e.target.checked; syncTone(); save();
   });
   document.getElementById("format").addEventListener("change", (e) => {
     P.format = e.target.value; layout(); save();

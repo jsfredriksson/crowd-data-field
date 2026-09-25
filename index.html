@@ -60,6 +60,31 @@
       </select>
     </label>
 
+    <label>source
+      <select id="source">
+        <option value="mask_tone">tone inside silhouette</option>
+        <option value="tone">tone — dark subject, bright room</option>
+        <option value="tone_inv">tone inverted — bright subject, dark room</option>
+        <option value="mask">silhouette only</option>
+      </select>
+    </label>
+
+    <div id="tonebox">
+      <label class="row"><input id="autoLevels" type="checkbox" /> auto levels</label>
+
+      <label>black point <output id="o_black"></output>
+        <input id="black" type="range" min="0" max="1" step="0.01" />
+      </label>
+
+      <label>white point <output id="o_white"></output>
+        <input id="white" type="range" min="0" max="1" step="0.01" />
+      </label>
+
+      <label>gamma <output id="o_gamma"></output>
+        <input id="gamma" type="range" min="0.3" max="3" step="0.05" />
+      </label>
+    </div>
+
     <label>format
       <select id="format">
         <option value="fill">fill window</option>
